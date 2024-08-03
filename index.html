@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pan and Pot Game</title>
+    <link rel="icon" type="image/x-icon" href="icons8-game-48.png">
+    <style>
+        
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+
+        #header {
+            width: 90%;
+            max-width: 1200px;
+            margin: 10px;
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        #game,
+        #history {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            min-width: 300px;
+            margin: 10px;
+        }
+
+        #feedback {
+            margin-top: 20px;
+        }
+
+        #playAgainButton {
+            margin-top: 20px;
+        }
+
+        #historyBox {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fff;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .guess {
+            position: relative;
+            font-size: 1.2em;
+            padding: 0.5em 1.4em;
+            background-color: #BF0426;
+            text-decoration: none;
+            border: none;
+            border-radius: 0.5em;
+            color: #DEDEDE;
+            box-shadow: 0.5em 0.5em 0.5em rgba(0, 0, 0, 0.3);
+        }
+
+        .guess::before {
+            position: absolute;
+            content: '';
+            height: 0;
+            width: 0;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, rgba(33, 33, 33, 1) 0%, rgba(33, 33, 33, 1) 50%, rgba(150, 4, 31, 1) 50%, rgba(191, 4, 38, 1) 60%);
+            border-radius: 0 0 0.5em 0;
+            box-shadow: 0.2em 0.2em 0.2em rgba(0, 0, 0, 0.3);
+            transition: 0.3s;
+        }
+
+        .guess:hover::before {
+            width: 1.6em;
+            height: 1.6em;
+        }
+
+        .guess:active {
+            box-shadow: 0.2em 0.2em 0.3em rgba(0, 0, 0, 0.3);
+            transform: translate(0.1em, 0.1em);
+        }
+
+        footer {
+            background-color: #BF0426;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header">
+        <p style="font-size: larger;">Game created by Johnpaul Mba. &copy 2024</p>
+    </div>
+    <div id="container">
+        <div id="game">
+            <h1>Pot and Pan Game</h1>
+            <p>Guess the 4-digit code. Each digit is unique.</p>
+            <h2>Rules:</h2>
+            <ul style="list-style:upper-roman;">
+                <li>Each digit in the code is unique and between 0-9.</li>
+                <li>"Pan" means the digit is correct but in the wrong position.</li>
+                <li>"Pot" means the digit is correct and in the correct position.</li>
+                <li>Keep guessing until you get all 4 "Pots" to win.</li>
+            </ul>
+            <input type="text" id="guess" maxlength="4" placeholder="Enter your guess"
+                style="border-width: 3px; border-radius: 4px; height: 30px;">
+            <button onclick="makeGuess()" class="guess"><span>Guess</span></button>
+            <div id="feedback"></div>
+            <button id="playAgainButton" onclick="playAgain()" style="display:none;">Play Again</button>
+        </div>
+        <div id="history">
+            <h2 style="color: #BF0426;">Guess History</h2>
+            <div id="historyBox">
+                <ul id="historyList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Pot and Pan. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let code = generateCode();
+        let attempts = 0;
+
+        function generateCode() {
+            let digits = [...Array(10).keys()];
+            digits.sort(() => Math.random() - 0.5);
+            return digits.slice(0, 4);
+        }
+
+        function getFeedback(guess) {
+            let pan = 0;
+            let pot = 0;
+            for (let i = 0; i < 4; i++) {
+                if (guess[i] == code[i]) {
+                    pot++;
+                } else if (code.includes(parseInt(guess[i]))) {
+                    pan++;
+                }
+            }
+            return { pan, pot };
+        }
+
+        function makeGuess() {
+            const guessInput = document.getElementById('guess');
+            const guess = guessInput.value;
+            if (guess.length !== 4 || new Set(guess).size !== 4) {
+                alert("Invalid guess. Make sure it's a 4-digit number with unique digits.");
+                return;
+            }
+
+            attempts++;
+            const { pan, pot } = getFeedback(guess.split('').map(Number));
+
+            const feedbackDiv = document.getElementById('feedback');
+            feedbackDiv.innerHTML = `Pan: ${pan}, Pot: ${pot}<br>`;
+
+            const historyList = document.getElementById('historyList');
+            const historyItem = document.createElement('li');
+            historyItem.textContent = `Guess: ${guess} - Pan: ${pan}, Pot: ${pot}`;
+            historyList.appendChild(historyItem);
+
+            if (pot === 4) {
+                feedbackDiv.innerHTML += `Congratulations! You've guessed the code in ${attempts} attempts.`;
+                document.getElementById('playAgainButton').style.display = 'block';
+            }
+
+            guessInput.value = '';
+        }
+
+        document.getElementById('guess').addEventListener('keyup', function (event) {
+            if (event.key === 'Enter') {
+                makeGuess();
+            }
+        });
+
+        function playAgain() {
+            code = generateCode();
+            attempts = 0;
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('guess').value = '';
+            document.getElementById('historyList').innerHTML = '';
+            document.getElementById('playAgainButton').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>
